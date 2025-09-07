@@ -2,8 +2,11 @@
 
 use function Livewire\Volt\{state, rules, mount};
 use App\Models\Memo;
+use Illuminate\Support\Facades\Gate;
 
-state(['title' => '', 'body' => '', 'memo' => null]);
+state(['memo' => fn(Memo $memo) => $memo]);
+state(['title' => '']);
+state(['body' => '']);
 
 rules([
     'title' => ['required', 'string', 'max:50'],
@@ -11,7 +14,10 @@ rules([
 ]);
 
 mount(function (Memo $memo) {
-    $this->memo = $memo;
+    if (Gate::denies('update', $memo)) {
+        abort(403);
+    }
+
     $this->title = $memo->title;
     $this->body = $memo->body;
 });
@@ -59,10 +65,10 @@ $save = function () {
 
             <div class="flex items-center gap-4">
                 <x-primary-button>更新</x-primary-button>
-
-                <x-secondary-link-button :href="route('memos.show', ['memo' => $memo->id])">
+                <a href="{{ route('memos.show', $memo) }}"
+                    class="inline-flex items-center px-4 py-2 bg-white border border-gray-300 rounded-md font-semibold text-xs text-gray-700 uppercase tracking-widest shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 disabled:opacity-25 transition ease-in-out duration-150">
                     キャンセル
-                </x-secondary-link-button>
+                </a>
             </div>
         </form>
     </div>
